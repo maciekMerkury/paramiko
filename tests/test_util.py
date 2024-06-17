@@ -134,3 +134,12 @@ class UtilTest(unittest.TestCase):
         assert safe_vanilla == vanilla, msg
         msg = err.format(safe_has_bytes, expected_bytes)
         assert safe_has_bytes == expected_bytes, msg
+
+    def test_u(self):
+        text = "the industrial revolution and its consequences"
+        assert text == paramiko.util.u(text)
+        assert text == paramiko.util.u(text.encode("utf-8"))
+        assert text == paramiko.util.u(text.encode("ascii"), "ascii")
+
+        self.assertRaises(TypeError, paramiko.util.u, 12)
+
