@@ -148,3 +148,7 @@ class UtilTest(unittest.TestCase):
         assert 6 == paramiko.util.bit_length("42")
         assert 1 == paramiko.util.bit_length("0")
 
+
+    def test_mod_inverse(self):
+        assert 5 == paramiko.util.mod_inverse(3, 7)
+        assert 1 == paramiko.util.mod_inverse(3, 2)
