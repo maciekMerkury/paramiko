@@ -143,3 +143,8 @@ class UtilTest(unittest.TestCase):
 
         self.assertRaises(TypeError, paramiko.util.u, 12)
 
+    def test_bit_length(self):
+        assert 6 == paramiko.util.bit_length(42)
+        assert 6 == paramiko.util.bit_length("42")
+        assert 1 == paramiko.util.bit_length("0")
+
