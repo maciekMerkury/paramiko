@@ -1,6 +1,8 @@
 from unittest.mock import Mock
 
 from pytest import mark, raises
+from paramiko import SSHException
+from paramiko.agent import AgentSSH
 
 from paramiko import AgentKey, Message, RSAKey
 from paramiko.agent import (
@@ -149,3 +151,22 @@ class AgentKey_:
             assert msg.get_string() == expected_request_key_blob
             assert msg.get_string() == b"data-to-sign"
             assert msg.get_int() == expected_flag
+
+class AgentSSHWithMockConn(AgentSSH):
+    def __init__(self):
+        super().__init__()
+        self._conn = Mock()
+
+class TestReadAll:
+    def test_read_all_success(self):
+        mock_conn = Mock()
+        mock_conn.recv.side_effect = [b"data", b"_more_data"]
+
+        agent_ssh = AgentSSHWithMockConn()
+        agent_ssh._conn = mock_conn
+
+        result = agent_ssh._read_all(14)
+        assert result == b"data_more_data"
+        
+        mock_conn.recv.assert_any_call(14)
+        mock_conn.recv.assert_any_call(10)
