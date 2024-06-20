@@ -1074,6 +1074,16 @@ class TransportTest(unittest.TestCase):
         assert tweaked.packetizer.__class__ is MyPacketizer
 
 
+    def test_getpeername(self):
+        mock_socket = Mock()
+        mock_socket.getpeername.return_value = ('127.0.0.1', 22)
+        transport = Transport(mock_socket)
+        result = transport.getpeername()
+        self.assertEqual(result, ('127.0.0.1', 22))
+        mock_socket.getpeername.assert_called_once()
+
+
+
 # TODO: for now this is purely a regression test. It needs actual tests of the
 # intentional new behavior too!
 class ServiceRequestingTransportTest(TransportTest):
