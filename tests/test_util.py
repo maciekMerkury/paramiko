@@ -138,6 +138,24 @@ class UtilTest(unittest.TestCase):
         assert safe_vanilla == vanilla, msg
         msg = err.format(safe_has_bytes, expected_bytes)
         assert safe_has_bytes == expected_bytes, msg
+
+    def test_u(self):
+        text = "the industrial revolution and its consequences"
+        assert text == paramiko.util.u(text)
+        assert text == paramiko.util.u(text.encode("utf-8"))
+        assert text == paramiko.util.u(text.encode("ascii"), "ascii")
+
+        self.assertRaises(TypeError, paramiko.util.u, 12)
+
+    def test_bit_length(self):
+        assert 6 == paramiko.util.bit_length(42)
+        assert 6 == paramiko.util.bit_length("42")
+        assert 1 == paramiko.util.bit_length("0")
+
+
+    def test_mod_inverse(self):
+        assert 5 == paramiko.util.mod_inverse(3, 7)
+        assert 1 == paramiko.util.mod_inverse(3, 2)
     
     def test_debug_print(self):
         
@@ -194,5 +212,3 @@ class UtilTest(unittest.TestCase):
         test_obj.attr["test2"] = "test_val2"
         test_obj._pack(Message())
         assert test_obj._flags <= test_obj.FLAG_EXTENDED
-
-
