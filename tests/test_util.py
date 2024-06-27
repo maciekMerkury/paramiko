@@ -212,3 +212,12 @@ class UtilTest(unittest.TestCase):
         test_obj.attr["test2"] = "test_val2"
         test_obj._pack(Message())
         assert test_obj._flags <= test_obj.FLAG_EXTENDED
+
+   def test_deflate_long(self): 
+        assert b'\x00' == paramiko.util.deflate_long(0)
+        assert b'\xff' == paramiko.util.deflate_long(-1)
+        assert b'\xff\x7f' == paramiko.util.deflate_long(-129)
+
+    def test_constant_time_bytes_eq(self): 
+        assert False == paramiko.util.constant_time_bytes_eq(b'2137', b'2137777')
+        
