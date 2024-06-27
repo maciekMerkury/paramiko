@@ -22,12 +22,16 @@ Some unit tests for utility functions.
 
 from binascii import hexlify
 import os
+import stat
 from hashlib import sha1
 import unittest
 
 import paramiko
 import paramiko.util
 from paramiko.util import safe_string
+from paramiko.sftp_attr import SFTPAttributes
+from paramiko.message import Message
+
 
 
 test_hosts_file = """\
@@ -135,13 +139,85 @@ class UtilTest(unittest.TestCase):
         msg = err.format(safe_has_bytes, expected_bytes)
         assert safe_has_bytes == expected_bytes, msg
 
+    def test_u(self):
+        text = "the industrial revolution and its consequences"
+        assert text == paramiko.util.u(text)
+        assert text == paramiko.util.u(text.encode("utf-8"))
+        assert text == paramiko.util.u(text.encode("ascii"), "ascii")
 
-    def test_deflate_long(self): 
+        self.assertRaises(TypeError, paramiko.util.u, 12)
+
+    def test_bit_length(self):
+        assert 6 == paramiko.util.bit_length(42)
+        assert 6 == paramiko.util.bit_length("42")
+        assert 1 == paramiko.util.bit_length("0")
+
+
+    def test_mod_inverse(self):
+        assert 5 == paramiko.util.mod_inverse(3, 7)
+        assert 1 == paramiko.util.mod_inverse(3, 2)
+    
+    def test_debug_print(self):
+        
+        test_obj = SFTPAttributes()
+        test_obj.st_size = 0
+        assert test_obj._debug_str() == "[ size=0 ]"
+        
+        test_obj.st_uid = 1
+        test_obj.st_gid = 2
+        assert test_obj._debug_str() == "[ size=0 uid=1 gid=2 ]"
+         
+        test_obj.st_mode = 10
+        assert test_obj._debug_str() == "[ size=0 uid=1 gid=2 mode=0o12 ]"
+
+        test_obj.st_atime = 3
+        test_obj.st_mtime = 4
+        assert test_obj._debug_str() == "[ size=0 uid=1 gid=2 mode=0o12 atime=3 mtime=4 ]"
+        
+        test_obj.attr["hey"] = "test"
+        assert test_obj._debug_str() == "[ size=0 uid=1 gid=2 mode=0o12 atime=3 mtime=4 \"hey\"='test' ]"
+
+
+    def test_file_long_description(self):
+
+        test_obj = SFTPAttributes()
+
+        test_obj.st_mode =  stat.S_IFDIR | 0o755
+        assert test_obj.__str__() == "drwxr-xr-x   1 0        0               0 (unknown date) ?"
+
+        test_obj.st_mode = stat.S_IFCHR | 0o644
+        assert test_obj.__str__() == "crw-r--r--   1 0        0               0 (unknown date) ?"
+
+        test_obj.st_mode = stat.S_IFIFO | 0o644
+        assert test_obj.__str__() == "prw-r--r--   1 0        0               0 (unknown date) ?"
+        
+        test_obj.st_mode = stat.S_IFBLK | 0o644
+        assert test_obj.__str__() == "brw-r--r--   1 0        0               0 (unknown date) ?"
+
+        test_obj.st_mode = stat.S_IFREG | 0o644
+        assert test_obj.__str__() == "-rw-r--r--   1 0        0               0 (unknown date) ?"
+
+        test_obj.st_mode = stat.S_IFLNK | 0o644
+        assert test_obj.__str__() == "lrw-r--r--   1 0        0               0 (unknown date) ?"
+        
+        test_obj.st_mode = stat.S_IFSOCK | 0o644
+        assert test_obj.__str__() == "srw-r--r--   1 0        0               0 (unknown date) ?"
+    
+        test_obj.st_mode = 1
+        assert test_obj.__str__() == "?--------x   1 0        0               0 (unknown date) ?"
+
+    def test_pack(self):
+        test_obj = SFTPAttributes()
+        test_obj.attr["test1"] = "test_val1"
+        test_obj.attr["test2"] = "test_val2"
+        test_obj._pack(Message())
+        assert test_obj._flags <= test_obj.FLAG_EXTENDED
+
+   def test_deflate_long(self): 
         assert b'\x00' == paramiko.util.deflate_long(0)
         assert b'\xff' == paramiko.util.deflate_long(-1)
         assert b'\xff\x7f' == paramiko.util.deflate_long(-129)
 
     def test_constant_time_bytes_eq(self): 
         assert False == paramiko.util.constant_time_bytes_eq(b'2137', b'2137777')
-        
         
