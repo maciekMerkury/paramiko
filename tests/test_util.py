@@ -213,7 +213,7 @@ class UtilTest(unittest.TestCase):
         test_obj._pack(Message())
         assert test_obj._flags <= test_obj.FLAG_EXTENDED
 
-   def test_deflate_long(self): 
+    def test_deflate_long(self): 
         assert b'\x00' == paramiko.util.deflate_long(0)
         assert b'\xff' == paramiko.util.deflate_long(-1)
         assert b'\xff\x7f' == paramiko.util.deflate_long(-129)
