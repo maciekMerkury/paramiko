@@ -157,7 +157,8 @@ class AgentSSHWithMockConn(AgentSSH):
         super().__init__()
         self._conn = Mock()
 
-class TestReadAll:
+class TestReadAll(unittest.TestCase):
+    
     def test_read_all_success(self):
         mock_conn = Mock()
         mock_conn.recv.side_effect = [b"data", b"_more_data"]
@@ -166,7 +167,29 @@ class TestReadAll:
         agent_ssh._conn = mock_conn
 
         result = agent_ssh._read_all(14)
-        assert result == b"data_more_data"
+        self.assertEqual(result, b"data_more_data")
         
         mock_conn.recv.assert_any_call(14)
         mock_conn.recv.assert_any_call(10)
+        
+    def test_read_all_no_data_first_call(self):
+        mock_conn = Mock()
+        mock_conn.recv.side_effect = [b"", b"data"]
+
+        agent_ssh = AgentSSHWithMockConn()
+        agent_ssh._conn = mock_conn
+
+        with self.assertRaises(SSHException) as context:
+            agent_ssh._read_all(14)
+        self.assertEqual(str(context.exception), "lost ssh-agent")
+        
+    def test_read_all_no_data_second_call(self):
+        mock_conn = Mock()
+        mock_conn.recv.side_effect = [b"data", b""]
+
+        agent_ssh = AgentSSHWithMockConn()
+        agent_ssh._conn = mock_conn
+
+        with self.assertRaises(SSHException) as context:
+            agent_ssh._read_all(14)
+        self.assertEqual(str(context.exception), "lost ssh-agent")
